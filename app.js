@@ -25,6 +25,15 @@ app.get('/login', (req, res) => {
     res.render('login');
 })
 
+app.post('/login', async (req, res) => {
+    let {email, password} = req.body;
+    let user = await userModel.findOne({email});
+    if(!user) return res.status(500).send('Something went wrong');
+    console.log(user)
+
+    // bcrypt.compare(password, user)
+})
+
 app.post('/register', async (req, res) => {
     let {name, username, email, password, age} = req.body;
     let user = await userModel.findOne({email});
@@ -39,11 +48,12 @@ app.post('/register', async (req, res) => {
                 password: hash,
                 age
             })
-            let token = jwt.sign({email, userId: user._id}, 'secret');
-            res.cookie('token', token)
-            res.send('Registered')
+            
         })
     })
+    let token = jwt.sign({email, userId: user._id}, 'secret');
+            res.cookie('token', token)
+            res.send('Registered')
 
 })
 
