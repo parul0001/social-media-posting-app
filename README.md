@@ -1,1 +1,1 @@
-## A simple user-post app
+## A social media posting app
