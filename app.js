@@ -16,7 +16,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieParser())
 
 function isLoggedIn(req, res, next) {
-    if(req.cookies.token === '') res.send('You must log in first')
+    if(req.cookies.token === '') res.redirect('/login')
     else {
         let data = jwt.verify(req.cookies.token, 'secret')
         req.user = data;    
@@ -42,7 +42,7 @@ app.post('/login', async (req, res) => {
         if(result){
             let token = jwt.sign({email, userId: user._id}, 'secret');
             res.cookie('token', token);
-            res.status(200).send('You can login');
+            res.status(200).redirect('/profile');
         } 
             
         else res.redirect('/login')
@@ -77,9 +77,9 @@ app.post('/register', async (req, res) => {
 
 })
 
-app.get('/profile', isLoggedIn, (req, res) => {
-    console.log(req.user);
-    res.redirect('login')
+app.get('/profile', isLoggedIn, async (req, res) => {
+    let user = await userModel.findOne({email: req.user.email})
+    res.render('profile', {user})
 })
 
 app.listen(3000)
