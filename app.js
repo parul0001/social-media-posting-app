@@ -61,25 +61,41 @@ app.post('/register', async (req, res) => {
 
     bcrypt.genSalt(10, (err, salt) => {
         bcrypt.hash(password, salt, async (err, hash) => {
-            await userModel.create({
+            let createdUser = await userModel.create({
                 name,
                 username,
                 email,
                 password: hash,
                 age
             })
+            let token = jwt.sign({email, userId: createdUser._id}, 'secret');
+            res.cookie('token', token)
+            res.send('Registered')
             
         })
     })
-    let token = jwt.sign({email, userId: user._id}, 'secret');
-            res.cookie('token', token)
-            res.send('Registered')
+    
 
 })
 
 app.get('/profile', isLoggedIn, async (req, res) => {
-    let user = await userModel.findOne({email: req.user.email})
+    let user = await userModel.findOne({email: req.user.email}).populate('posts');  
+    
     res.render('profile', {user})
 })
+
+app.post('/post', isLoggedIn, async (req, res) => {
+   let user = await userModel.findOne({email: req.user.email});
+   let {content} = req.body;
+
+   let post = await postModel.create({
+        user: user._id,
+        content,
+   })
+   user.posts.push(post._id);
+   await user.save();
+   res.redirect('/profile')
+})
+
 
 app.listen(3000)
